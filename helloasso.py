@@ -1,8 +1,11 @@
 #! /usr/bin/env python3
 
 import sys
+import json
+import api
 from helloasso_api.oauth2 import OAuth2Api
 from helloasso_api.apiv5client import ApiV5Client
+
 
 clientId = ""
 clientSecret = ""
@@ -41,10 +44,23 @@ class MyApi:
         while total > 0:
             total = res["pagination"]["totalCount"]
             res = self._client.call(
-                f"organizations/bde-42/forms/event/wed/items?continuationToken={res['pagination']['continuationToken']}"
+                f"organizations/bde-42/forms/event/wed/items?withDetails=true&continuationToken={res['pagination']['continuationToken']}"
             ).json()
             items["data"].extend(res["data"])
         return items
+
+TOKEN = api.get_token_from_env()
+
+def checkapi(login: str):
+    matching_users = api.get(TOKEN, '/v2/users?filter[login]=' + login)
+    return len(matching_users) != 0
+
+def isstud(first_name: str, last_name: str, login: str):
+    if checkapi(login.lower()):
+        return "Stud verif ok"
+    else:
+        return "ALERTE non stud " + login
+
 
 
 auth = OAuth2Api(
@@ -73,7 +89,10 @@ if sys.argv[1] == "total":
     print(len(res))
 elif sys.argv[1] == "list":
     for item in res:
-        print(item["user"]["firstName"], item["user"]["lastName"])
+        if 'customFields' in item:
+            print(item["user"]["firstName"] + " " + item["user"]["lastName"] + " " + isstud(item["user"]["firstName"], item["user"]["lastName"], item["customFields"][0]["answer"]))
+        else:
+            print(item["user"]["firstName"] + " " + item["user"]["lastName"] + " pas de CustomFields")
 else:
     print("Usage: helloasso.py <total | list>")
     sys.exit(1)
