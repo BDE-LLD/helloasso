@@ -1,14 +1,14 @@
 #! /usr/bin/env python3
 
 import sys
-import json
 import api
 from helloasso_api.oauth2 import OAuth2Api
 from helloasso_api.apiv5client import ApiV5Client
+import dotenv
 
-
-clientId = ""
-clientSecret = ""
+dotenv.load()
+clientId = dotenv.get('CLIENTHELLOASSO_ID')
+clientSecret = dotenv.get('CLIENTHELLOASSO_SECRET')
 
 
 class MyApi:
@@ -37,7 +37,7 @@ class MyApi:
             "data": [],
             "total": 0,
         }
-        res = self._client.call("organizations/bde-42/forms/event/wed/items").json()
+        res = self._client.call("organizations/bde-42/forms/event/wed/items?withDetails=true").json()
         total = res["pagination"]["totalCount"]
         items["total"] = total
         items["data"].extend(res["data"])
@@ -49,15 +49,15 @@ class MyApi:
             items["data"].extend(res["data"])
         return items
 
-TOKEN = api.get_token_from_env()
+TOKEN = api.get_token(dotenv.get('CLIENT42_ID'), dotenv.get('CLIENT42_SECRET'))
 
-def checkapi(login: str):
+def checkapi(first_name: str, last_name: str, login: str):
     matching_users = api.get(TOKEN, '/v2/users?filter[login]=' + login)
     return len(matching_users) != 0
 
 def isstud(first_name: str, last_name: str, login: str):
-    if checkapi(login.lower()):
-        return "Stud verif ok"
+    if checkapi(first_name, last_name, login.lower()):
+        return "Stud verif ok " + login
     else:
         return "ALERTE non stud " + login
 
@@ -89,10 +89,7 @@ if sys.argv[1] == "total":
     print(len(res))
 elif sys.argv[1] == "list":
     for item in res:
-        if 'customFields' in item:
-            print(item["user"]["firstName"] + " " + item["user"]["lastName"] + " " + isstud(item["user"]["firstName"], item["user"]["lastName"], item["customFields"][0]["answer"]))
-        else:
-            print(item["user"]["firstName"] + " " + item["user"]["lastName"] + " pas de CustomFields")
+        print(item["user"]["firstName"] + " " + item["user"]["lastName"] + " " + isstud(item["user"]["firstName"], item["user"]["lastName"], item["customFields"][0]["answer"]))
 else:
     print("Usage: helloasso.py <total | list>")
     sys.exit(1)
