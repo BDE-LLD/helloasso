@@ -55,7 +55,7 @@ def sendWebhook(data: dict):
 
 
 def saveUsers(users: list):
-    filePath = os.path.abspath("users.csv")
+    filePath = os.path.join(os.path.dirname(__file__), "users.csv")
     with open(filePath, "w") as f:
         writer = csv.DictWriter(f, fieldnames=["firstName", "lastName"])
         writer.writeheader()
@@ -64,7 +64,7 @@ def saveUsers(users: list):
 
 def loadUsers():
     users = []
-    filePath = os.path.abspath("users.csv")
+    filePath = os.path.join(os.path.dirname(__file__), "users.csv")
     with open(filePath, "r") as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -101,7 +101,8 @@ def main():
     if arg == "save":
         saveUsers(users)
     elif arg == "check":
-        if not os.path.isfile("users.csv"):
+        filePath = os.path.join(os.path.dirname(__file__), "users.csv")
+        if not os.path.isfile(filePath):
             saveUsers(users)
             print("initialisation of users.csv")
             return
