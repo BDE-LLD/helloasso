@@ -96,36 +96,35 @@ def main():
 
     arg = sys.argv[1]
 
-    match arg:
-        case "save":
+    if arg == "save":
+        saveUsers(users)
+    elif arg == "check":
+        if not os.path.isfile("users.csv"):
             saveUsers(users)
-        case "check":
-            if not os.path.isfile("users.csv"):
-                saveUsers(users)
-                print("initialisation of users.csv")
-                return
-            savedUsers = loadUsers()
-            diff = list(filter(lambda x: x not in savedUsers, users))
-            if len(diff) > 0:
-                str = ", ".join([u["firstName"] + " " + u["lastName"] for u in diff])
-                print(f"{len(diff)} tickets vendus !")
-                print(f"Dernier(s) acheteur(s) : {str}")
-                if WEBHOOK_URL:
-                    msg = {
-                        "content": f"**{len(users)}** tickets vendus !\nDernier(s) acheteur(s) : **{str}**",
-                        "username": "HelloAsso",
-                        "avatar_url": "https://www.helloasso.com/blog/wp-content/uploads/2022/02/Circle-logo-ha-150x150.png",
-                    }
-                    sendWebhook(msg)
-                saveUsers(users)
-            else:
-                print("No new users")
-        case "list":
-            print(f"{len(users)} tickets vendus")
-            for user in users:
-                print(f"{user['firstName']} {user['lastName']}")
-        case _:
-            print("No args")
+            print("initialisation of users.csv")
+            return
+        savedUsers = loadUsers()
+        diff = list(filter(lambda x: x not in savedUsers, users))
+        if len(diff) > 0:
+            str = ", ".join([u["firstName"] + " " + u["lastName"] for u in diff])
+            print(f"{len(diff)} tickets vendus !")
+            print(f"Dernier(s) acheteur(s) : {str}")
+            if WEBHOOK_URL:
+                msg = {
+                    "content": f"**{len(users)}** tickets vendus !\nDernier(s) acheteur(s) : **{str}**",
+                    "username": "HelloAsso",
+                    "avatar_url": "https://www.helloasso.com/blog/wp-content/uploads/2022/02/Circle-logo-ha-150x150.png",
+                }
+                sendWebhook(msg)
+            saveUsers(users)
+        else:
+            print("No new users")
+    elif arg == "list":
+        print(f"{len(users)} tickets vendus")
+        for user in users:
+            print(f"{user['firstName']} {user['lastName']}")
+    else:
+        print("No args or bad args")
 
 
 if __name__ == "__main__":
