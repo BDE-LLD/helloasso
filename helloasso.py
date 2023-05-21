@@ -100,17 +100,26 @@ def main():
         case "save":
             saveUsers(users)
         case "check":
+            if not os.path.isfile("users.csv"):
+                saveUsers(users)
+                print("initialisation of users.csv")
+                return
             savedUsers = loadUsers()
             diff = list(filter(lambda x: x not in savedUsers, users))
             if len(diff) > 0:
                 str = ", ".join([u["firstName"] + " " + u["lastName"] for u in diff])
-                msg = {
-                    "content": f"**{len(users)}** tickets vendus !\nDernier(s) acheteur(s) : **{str}**",
-                    "username": "HelloAsso",
-                    "avatar_url": "https://www.helloasso.com/blog/wp-content/uploads/2022/02/Circle-logo-ha-150x150.png",
-                }
-                sendWebhook(msg)
+                print(f"{len(diff)} tickets vendus !")
+                print(f"Dernier(s) acheteur(s) : {str}")
+                if WEBHOOK_URL:
+                    msg = {
+                        "content": f"**{len(users)}** tickets vendus !\nDernier(s) acheteur(s) : **{str}**",
+                        "username": "HelloAsso",
+                        "avatar_url": "https://www.helloasso.com/blog/wp-content/uploads/2022/02/Circle-logo-ha-150x150.png",
+                    }
+                    sendWebhook(msg)
                 saveUsers(users)
+            else:
+                print("No new users")
         case "list":
             print(f"{len(users)} tickets vendus")
             for user in users:
