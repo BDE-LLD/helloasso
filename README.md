@@ -32,3 +32,7 @@ WEBHOOK_URL=""
 HELLOASSO_CLIENT_ID=""
 HELLOASSO_CLIENT_SECRET=""
 ```
+
+# congig.json
+
+I let what I use as config for exemple

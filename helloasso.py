@@ -18,22 +18,28 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 
 class MyApi:
-    def __init__(self, client) -> None:
-        self._client = client
+    _client: ApiV5Client
+    organisationSlug: str
 
-    def fetchItems(self):
+    def __init__(self, client, organisationSlug) -> None:
+        self._client = client
+        self.organisationSlug = organisationSlug
+
+    def fetchItems(self, formsType: str, formSlug: str):
         items = {
             "data": [],
             "total": 0,
         }
-        res = self._client.call("organizations/bde-42/forms/event/wed/items").json()
+        res = self._client.call(
+            f"organizations/{self.organisationSlug}/forms/{formsType}/{formSlug}/items"
+        ).json()
         total = res["pagination"]["totalCount"]
         items["total"] = total
         items["data"].extend(res["data"])
         while total > 0:
             total = res["pagination"]["totalCount"]
             res = self._client.call(
-                f"organizations/bde-42/forms/event/wed/items?continuationToken={res['pagination']['continuationToken']}"
+                f"organizations/{self.organisationSlug}/forms/{formsType}/{formSlug}/items?continuationToken={res['pagination']['continuationToken']}"
             ).json()
             items["data"].extend(res["data"])
         return items
@@ -90,9 +96,17 @@ def main():
         refresh_token=auth.refresh_token,
     )
 
-    myApi = MyApi(client)
+    with open(os.path.join(os.path.dirname(__file__), "config.json"), "r") as f:
+        config = json.load(f)
 
-    res = list(filter(lambda x: x["type"] != "Donation", myApi.fetchItems()["data"]))
+    myApi = MyApi(client, config["organisationSlug"])
+
+    res = list(
+        filter(
+            lambda x: x["type"] != "Donation",
+            myApi.fetchItems(config["formType"], config["formSlug"])["data"],
+        )
+    )
 
     users = [item["user"] for item in res]
 
